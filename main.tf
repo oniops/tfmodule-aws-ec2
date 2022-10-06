@@ -109,7 +109,7 @@ resource "aws_instance" "this" {
   }
 
 #  lifecycle {
-#    ignore_changes = [ "ami" ]
+#    ignore_changes = [ ami ]
 #  }
 
   tags        = merge({ "Name" = var.name }, var.tags)
