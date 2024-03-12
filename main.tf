@@ -108,10 +108,14 @@ resource "aws_instance" "this" {
     delete = lookup(var.timeouts, "delete", null)
   }
 
-#  lifecycle {
-#    ignore_changes = [ ami ]
-#  }
+  #  lifecycle {
+  #    ignore_changes = [ ami ]
+  #  }
 
-  tags        = merge({ "Name" = var.name }, var.tags)
+  tags = merge(var.tags, var.instance_tags, {
+    Name = var.name
+  })
+
   volume_tags = var.enable_volume_tags ? merge({ "Name" = var.name }, var.volume_tags) : null
+
 }
