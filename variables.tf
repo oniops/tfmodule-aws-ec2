@@ -10,6 +10,43 @@ variable "ami" {
   default     = ""
 }
 
+# variable "cpu_core_count" {
+#   description = "Sets the number of CPU cores for an instance." # This option is only supported on creation of instance type that support CPU Options https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values
+#   type        = number
+#   default     = null
+# }
+#
+# variable "cpu_threads_per_core" {
+#   description = "Sets the number of CPU threads per core for an instance (has no effect unless cpu_core_count is also set)."
+#   type        = number
+#   default     = null
+# }
+
+variable "cpu_options" {
+  type        = any
+  default     = {}
+  description = <<EOF
+Defines CPU options to apply to the instance at launch time.
+
+  cpu_options = {
+    core_count       = 2
+    threads_per_core = 1
+  }
+EOF
+}
+
+variable "cpu_credits" {
+  description = "The credit option for CPU usage (unlimited or standard)"
+  type        = string
+  default     = null
+}
+
+variable "hibernation" {
+  description = "If true, the launched EC2 instance will support hibernation"
+  type        = bool
+  default     = null
+}
+
 variable "associate_public_ip_address" {
   description = "Whether to associate a public IP address with an instance in a VPC"
   type        = bool
@@ -18,12 +55,6 @@ variable "associate_public_ip_address" {
 
 variable "availability_zone" {
   description = "AZ to start the instance in"
-  type        = string
-  default     = null
-}
-
-variable "cpu_credits" {
-  description = "The credit option for CPU usage (unlimited or standard)"
   type        = string
   default     = null
 }
@@ -60,12 +91,6 @@ variable "ephemeral_block_device" {
 
 variable "get_password_data" {
   description = "If true, wait for password data to become available and retrieve it."
-  type        = bool
-  default     = null
-}
-
-variable "hibernation" {
-  description = "If true, the launched EC2 instance will support hibernation"
   type        = bool
   default     = null
 }
@@ -166,6 +191,22 @@ variable "subnet_id" {
   default     = null
 }
 
+variable "network_interface" {
+  type        = list(map(string))
+  default     = []
+  description = <<EOF
+Customize network interfaces to be attached at instance boot time
+
+  network_interface = [
+    {
+      device_index          = 0
+      network_interface_id  = aws_network_interface.this.id
+      delete_on_termination = false
+    }
+  ]
+EOF
+}
+
 variable "tags" {
   description = "A mapping of tags to assign to the resource"
   type        = map(string)
@@ -219,19 +260,6 @@ variable "timeouts" {
   type        = map(string)
   default     = {}
 }
-
-variable "cpu_core_count" {
-  description = "Sets the number of CPU cores for an instance." # This option is only supported on creation of instance type that support CPU Options https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values
-  type        = number
-  default     = null
-}
-
-variable "cpu_threads_per_core" {
-  description = "Sets the number of CPU threads per core for an instance (has no effect unless cpu_core_count is also set)."
-  type        = number
-  default     = null
-}
-
 variable "disable_api_stop" {
   description = "If true, enables EC2 Instance Stop Protection."
   type        = bool

@@ -5,9 +5,18 @@ locals {
 resource "aws_instance" "this" {
   ami                  = var.ami
   instance_type        = var.instance_type
-  cpu_core_count       = var.cpu_core_count
-  cpu_threads_per_core = var.cpu_threads_per_core
   hibernation          = var.hibernation
+
+  dynamic "cpu_options" {
+    for_each =  length(var.cpu_options) > 0 ? [var.cpu_options] : []
+    content {
+      core_count       = try(cpu_options.value.core_count, null)
+      threads_per_core = try(cpu_options.value.threads_per_core, null)
+      amd_sev_snp      = try(cpu_options.value.amd_sev_snp, null)
+    }
+  }
+  #   cpu_core_count       = var.cpu_core_count
+  #   cpu_threads_per_core = var.cpu_threads_per_core
 
   user_data_base64            = var.user_data_base64
   user_data_replace_on_change = var.user_data_replace_on_change
@@ -15,6 +24,15 @@ resource "aws_instance" "this" {
   availability_zone      = var.availability_zone
   subnet_id              = var.subnet_id
   vpc_security_group_ids = var.vpc_security_group_ids
+
+  dynamic "network_interface" {
+    for_each = var.network_interface
+    content {
+      device_index          = network_interface.value.device_index
+      network_interface_id  = lookup(network_interface.value, "network_interface_id", null)
+      delete_on_termination = try(network_interface.value.delete_on_termination, false)
+    }
+  }
 
   key_name             = var.key_name
   monitoring           = var.monitoring
