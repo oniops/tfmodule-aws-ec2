@@ -182,7 +182,7 @@ variable "secondary_private_ips" {
 variable "source_dest_check" {
   description = "Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs."
   type        = bool
-  default     = true
+  default     = null
 }
 
 variable "subnet_id" {
