@@ -3,6 +3,7 @@ locals {
 }
 
 resource "aws_instance" "this" {
+  count                = var.create ? 1: 0
   ami                  = var.ami
   instance_type        = var.instance_type
   hibernation          = var.hibernation
@@ -126,9 +127,11 @@ resource "aws_instance" "this" {
     delete = lookup(var.timeouts, "delete", null)
   }
 
-  #  lifecycle {
-  #    ignore_changes = [ ami ]
-  #  }
+  lifecycle {
+    ignore_changes = [
+      ami
+    ]
+  }
 
   tags = merge(var.tags, var.instance_tags, {
     Name = var.name
