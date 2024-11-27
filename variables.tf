@@ -265,8 +265,15 @@ variable "timeouts" {
   type        = map(string)
   default     = {}
 }
+
 variable "disable_api_stop" {
   description = "If true, enables EC2 Instance Stop Protection."
   type        = bool
+  default     = null
+}
+
+variable "eip_allocation_id" {
+  description = "EIP id for EC2 instance"
+  type        = string
   default     = null
 }
