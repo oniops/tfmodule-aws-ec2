@@ -8,7 +8,7 @@ Terraform module which creates an EC2 instance on AWS.
 
 ```hcl
 module "ec2" {
-  source        = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.0.1"
+  source        = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.0.3"
   create        = true
   name          = "single-instance"
   ami           = "ami-ebd02392"
