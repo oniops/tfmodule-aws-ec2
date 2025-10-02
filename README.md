@@ -29,7 +29,7 @@ module "ec2" {
 
 ```hcl
 module "ec2" {
-  source = "git::https://code.bespinglobal.com/scm/op/tfmodule-aws-ec2.git?ref=v1.0.0"
+  source = "git::https://code.bespinglobal.com/scm/op/tfmodule-aws-ec2.git?ref=v1.0.3"
 
   for_each = toset(["one", "two", "three"])
   name          = "instance-${each.key}"
