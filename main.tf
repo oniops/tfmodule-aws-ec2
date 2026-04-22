@@ -26,12 +26,10 @@ resource "aws_instance" "this" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = var.vpc_security_group_ids
 
-  dynamic "network_interface" {
-    for_each = var.network_interface
+  dynamic "primary_network_interface" {
+    for_each = var.primary_network_interface != null ? [var.primary_network_interface] : []
     content {
-      device_index          = network_interface.value.device_index
-      network_interface_id  = lookup(network_interface.value, "network_interface_id", null)
-      delete_on_termination = try(network_interface.value.delete_on_termination, false)
+      network_interface_id = primary_network_interface.value
     }
   }
 
