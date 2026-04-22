@@ -62,3 +62,8 @@ output "tags_all" {
   description = "A map of tags assigned to the resource, including those inherited from the provider default_tags configuration block"
   value       = try(aws_instance.this[0].tags_all, {})
 }
+
+output "network_interface_attachment_ids" {
+  description = "Map of attachment IDs keyed by the `additional_network_interfaces` map key"
+  value       = { for k, v in aws_network_interface_attachment.this : k => v.id }
+}

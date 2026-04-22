@@ -196,20 +196,49 @@ variable "subnet_id" {
   default     = null
 }
 
-variable "network_interface" {
-  type        = list(map(string))
-  default     = []
+variable "primary_network_interface" {
+  type        = string
+  default     = null
   description = <<EOF
-Customize network interfaces to be attached at instance boot time
+ID of the primary network interface to attach at instance boot time. AWS provider 6.10.0+ replaces the deprecated `network_interface` block with `primary_network_interface`. When set, do not also set `subnet_id`, `vpc_security_group_ids`, `associate_public_ip_address`, `private_ip`, `secondary_private_ips`, or `ipv6_*` on the instance (they must be configured on the ENI itself).
 
-  network_interface = [
-    {
-      device_index          = 0
-      network_interface_id  = aws_network_interface.this.id
-      delete_on_termination = false
-    }
-  ]
+  primary_network_interface = aws_network_interface.this.id
 EOF
+
+  validation {
+    condition     = var.primary_network_interface == null || try(length(var.primary_network_interface), 0) > 0
+    error_message = "primary_network_interface must be a non-empty ENI ID or null."
+  }
+}
+
+variable "additional_network_interfaces" {
+  type = map(object({
+    network_interface_id = string
+    device_index         = number
+    network_card_index   = optional(number)
+  }))
+  default     = {}
+  description = <<EOF
+Additional network interfaces to attach via `aws_network_interface_attachment`. The primary ENI should be set via `primary_network_interface`. Map keys are used as stable resource identifiers for `for_each`.
+
+  additional_network_interfaces = {
+    one = {
+      network_interface_id = aws_network_interface.secondary1.id
+      device_index         = 1
+      network_card_index   = 0 # optional
+    }
+    two = {
+      network_interface_id = aws_network_interface.secondary2.id
+      device_index         = 2
+      network_card_index   = 0 # optional
+    }
+  }
+EOF
+
+  validation {
+    condition     = length(var.additional_network_interfaces) == length(distinct([for v in values(var.additional_network_interfaces) : "${v.device_index}-${coalesce(v.network_card_index, 0)}"]))
+    error_message = "Each additional_network_interfaces entry must have a unique (device_index, network_card_index) pair."
+  }
 }
 
 variable "tags" {

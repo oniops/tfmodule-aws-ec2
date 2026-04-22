@@ -1,4 +1,7 @@
 /.idea/
+/target/
+/tmp/
+/temp/
 .terraform.lock.hcl
 **/.terraform/
 *.tfstate.lock.info
