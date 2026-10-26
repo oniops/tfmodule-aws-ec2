@@ -108,6 +108,36 @@ module "ec2" {
 }
 ```
 
+### Ignoring user_data changes
+
+By default, changing `user_data_base64` on an existing instance makes Terraform stop the instance, update the user data, and start it again (or replace it when `user_data_replace_on_change = true`). For production instances whose user data only matters at first boot, set `ignore_user_data_changes = true` so later edits never touch the running instance.
+
+```hcl
+module "ec2" {
+  source                   = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=<version>"
+  name                     = "prd-instance"
+  ami                      = "ami-ebd02392"
+  instance_type            = "t3.micro"
+  subnet_id                = "subnet-eddcdzz4"
+  user_data_base64         = base64encode(file("${path.module}/user-data.sh"))
+  ignore_user_data_changes = true
+}
+```
+
+Because `lifecycle.ignore_changes` cannot be driven by a variable, the instance is managed under `aws_instance.ignore_user_data` when this flag is on.
+
+- **New instance**: just set the flag.
+- **Existing instance (flag `false` → `true`)**: add a `moved` block in the calling module **in the same change**, otherwise Terraform plans a **destroy/create** of the instance.
+
+  ```hcl
+  moved {
+    from = module.ec2.aws_instance.this[0]
+    to   = module.ec2.aws_instance.ignore_user_data[0]
+  }
+  ```
+
+  For `for_each` modules use `module.ec2["<key>"].aws_instance...`. Always confirm that `terraform plan` shows `has moved to` and **no** `must be replaced` / `destroy` before applying. Keeping the `moved` block after apply is harmless. Reverting (`true` → `false`) requires replacing it with the reverse `moved` block; leaving the original block in place makes `plan` fail with `Moved object still exists` (nothing is changed).
+
 ## Requirements
 
 | Name | Version |
@@ -126,6 +156,7 @@ module "ec2" {
 | Name | Type |
 |------|------|
 | `aws_instance.this` | resource |
+| `aws_instance.ignore_user_data` | resource (used instead of `aws_instance.this` when `ignore_user_data_changes = true`) |
 | `aws_network_interface_attachment.this` | resource |
 | `aws_eip_association.this` | resource |
 
@@ -171,6 +202,7 @@ module "ec2" {
 | tenancy | The tenancy of the instance. Available values: `default`, `dedicated`, `host` | `string` | `null` | no |
 | user_data_base64 | Base64-encoded binary data to pass as user data. Use instead of user_data when the value is not a valid UTF-8 string | `string` | `null` | no |
 | user_data_replace_on_change | When true, changes to `user_data` or `user_data_base64` trigger a destroy and recreate | `bool` | `false` | no |
+| ignore_user_data_changes | When true, changes to `user_data` / `user_data_base64` after launch are ignored. Cannot be combined with `user_data_replace_on_change = true`. See [Ignoring user_data changes](#ignoring-user_data-changes) | `bool` | `false` | no |
 | volume_tags | A mapping of tags to assign to the devices created by the instance at launch time | `map(string)` | `{}` | no |
 | enable_volume_tags | Whether to enable volume tags (if enabled it conflicts with `root_block_device` tags) | `bool` | `true` | no |
 | vpc_security_group_ids | A list of security group IDs to associate with | `list(string)` | `null` | no |
@@ -197,7 +229,8 @@ module "ec2" {
 
 ## Notes
 
-- The module uses `lifecycle.ignore_changes = [ami]` on `aws_instance.this` to prevent drift from AMI updates after the instance has been launched.
+- The module uses `lifecycle.ignore_changes = [ami]` on `aws_instance.this` to prevent drift from AMI updates after the instance has been launched. `aws_instance.ignore_user_data` additionally ignores `user_data` and `user_data_base64`.
+- With the default `ignore_user_data_changes = false`, the instance stays at `aws_instance.this[0]`, so upgrading the module causes no plan changes for existing instances.
 - The deprecated `aws_instance.network_interface` inline block has been replaced with `primary_network_interface` (for the primary ENI) and `aws_network_interface_attachment` (for additional ENIs). This requires AWS provider version `>= 6.10.0`.
 - `cpu_credits` only takes effect for T-family instance types (`t2.*`, `t3.*`, `t3a.*`).
 - When `eip_allocation_id` is provided, the module creates an `aws_eip_association` to bind the existing EIP to the instance. The EIP itself should be created outside this module.

@@ -271,6 +271,22 @@ variable "user_data_replace_on_change" {
   default     = false
 }
 
+variable "ignore_user_data_changes" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = <<EOF
+When true, changes to `user_data` / `user_data_base64` after launch are ignored (no stop/start, no replacement). Cannot be combined with `user_data_replace_on_change = true`.
+
+The instance is managed under `aws_instance.ignore_user_data` instead of `aws_instance.this`. When toggling this on an existing instance, move the state first, otherwise Terraform will plan a destroy/create:
+
+  moved {
+    from = module.ec2.aws_instance.this[0]
+    to   = module.ec2.aws_instance.ignore_user_data[0]
+  }
+EOF
+}
+
 variable "volume_tags" {
   description = "A mapping of tags to assign to the devices created by the instance at launch time"
   type        = map(string)
