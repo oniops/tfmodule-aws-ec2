@@ -193,7 +193,7 @@ Because `lifecycle.ignore_changes` cannot be driven by a variable, the instance 
 | private_ip | Private IP address to associate with the instance in a VPC | `string` | `null` | no |
 | root_block_device | Customize details about the root block device of the instance | `list(any)` | `[]` | no |
 | secondary_private_ips | A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC | `list(string)` | `null` | no |
-| source_dest_check | Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs | `bool` | `null` | no |
+| source_dest_check | Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs. Applied at creation only (changes after launch are ignored; use `-replace` or the AWS CLI). Cannot be combined with `primary_network_interface`; set it on the ENI instead | `bool` | `null` | no |
 | subnet_id | The VPC Subnet ID to launch in | `string` | `null` | no |
 | primary_network_interface | ID of the primary network interface to attach at instance boot time. AWS provider 6.10.0+ replaces the deprecated `network_interface` block with `primary_network_interface` | `string` | `null` | no |
 | additional_network_interfaces | Additional network interfaces to attach via `aws_network_interface_attachment`. Map keys are used as stable resource identifiers for `for_each`. Each value supports `network_interface_id`, `device_index`, and optional `network_card_index` | `map(any)` | `{}` | no |

@@ -129,8 +129,11 @@ resource "aws_instance" "this" {
   }
 
   lifecycle {
+    # source_dest_check is applied at creation only. With primary_network_interface the
+    # provider cannot set it and would reset an ENI-level false (e.g. NAT) back to true.
     ignore_changes = [
-      ami
+      ami,
+      source_dest_check,
     ]
   }
 
@@ -267,6 +270,7 @@ resource "aws_instance" "ignore_user_data" {
   lifecycle {
     ignore_changes = [
       ami,
+      source_dest_check,
       user_data,
       user_data_base64,
     ]
