@@ -14,7 +14,7 @@ This module supports the following resources:
 
 ```hcl
 module "ec2" {
-  source        = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.0.3"
+  source        = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.2.0"
   create        = true
   name          = "single-instance"
   ami           = "ami-ebd02392"
@@ -35,7 +35,7 @@ module "ec2" {
 
 ```hcl
 module "ec2" {
-  source = "git::https://code.bespinglobal.com/scm/op/tfmodule-aws-ec2.git?ref=v1.0.3"
+  source = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.2.0"
 
   for_each = toset(["one", "two", "three"])
   name          = "instance-${each.key}"
@@ -67,7 +67,7 @@ resource "aws_network_interface" "secondary" {
 }
 
 module "ec2" {
-  source        = "git::https://code.bespinglobal.com/scm/op/tfmodule-aws-ec2.git?ref=v1.0.0"
+  source        = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.2.0"
   name          = "multi-eni-instance"
   ami           = "ami-ebd02392"
   instance_type = "t3.medium"
@@ -96,7 +96,7 @@ resource "aws_eip" "this" {
 }
 
 module "ec2" {
-  source        = "git::https://code.bespinglobal.com/scm/op/tfmodule-aws-ec2.git?ref=v1.0.0"
+  source        = "git::https://github.com/oniops/tfmodule-aws-ec2.git?ref=v1.2.0"
   name          = "eip-instance"
   ami           = "ami-ebd02392"
   instance_type = "t3.micro"
@@ -140,16 +140,16 @@ Because `lifecycle.ignore_changes` cannot be driven by a variable, the instance 
 
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| terraform | >= 1.5.0 |
-| aws | >= 6.10.0, < 6.40.0 |
+| Name      | Version           |
+|-----------|-------------------|
+| terraform | >= 1.5.7          |
+| aws       | >= 6.10.0, < 7.0.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| aws | >= 6.10.0, < 6.40.0 |
+| Name | Version            |
+|------|--------------------|
+| aws  | >= 6.10.0, < 7.0.0 |
 
 ## Resources
 
@@ -168,14 +168,14 @@ Because `lifecycle.ignore_changes` cannot be driven by a variable, the instance 
 | name | Name to be used on EC2 instance created | `string` | `""` | no |
 | ami | ID of AMI to use for the instance | `string` | `""` | no |
 | instance_type | The type of instance to start | `string` | `"t3.micro"` | no |
-| cpu_options | Defines CPU options to apply to the instance at launch time (e.g. `{ core_count = 2, threads_per_core = 1 }`) | `any` | `{}` | no |
-| cpu_credits | The credit option for CPU usage (`unlimited` or `standard`). Applies only to T-family instances | `string` | `null` | no |
+| cpu_options | Defines CPU options to apply to the instance at launch time. Supported keys: `core_count`, `threads_per_core`, `amd_sev_snp` (e.g. `{ core_count = 2, threads_per_core = 1 }`) | `any` | `{}` | no |
+| cpu_credits | The credit option for CPU usage (`unlimited` or `standard`). Applied only to `t2.*`, `t3.*`, `t3a.*` instance types; ignored otherwise (including `t4g.*`) | `string` | `null` | no |
 | hibernation | If true, the launched EC2 instance will support hibernation | `bool` | `null` | no |
 | associate_public_ip_address | Whether to associate a public IP address with an instance in a VPC | `bool` | `null` | no |
 | availability_zone | AZ to start the instance in | `string` | `null` | no |
 | disable_api_termination | If true, enables EC2 Instance Termination Protection | `bool` | `null` | no |
 | disable_api_stop | If true, enables EC2 Instance Stop Protection | `bool` | `null` | no |
-| ebs_block_device | Additional EBS block devices to attach to the instance | `list(map(string))` | `[]` | no |
+| ebs_block_device | Additional EBS block devices to attach to the instance. `device_name` is required; supported keys: `delete_on_termination`, `encrypted`, `iops`, `kms_key_id`, `snapshot_id`, `volume_size`, `volume_type`, `throughput` | `list(map(string))` | `[]` | no |
 | ebs_optimized | If true, the launched EC2 instance will be EBS-optimized | `bool` | `null` | no |
 | enclave_options_enabled | Whether Nitro Enclaves will be enabled on the instance. Defaults to `false` | `bool` | `null` | no |
 | ephemeral_block_device | Customize Ephemeral (also known as Instance Store) volumes on the instance | `list(map(string))` | `[]` | no |
@@ -186,28 +186,28 @@ Because `lifecycle.ignore_changes` cannot be driven by a variable, the instance 
 | ipv6_address_count | Number of IPv6 addresses to associate with the primary network interface | `number` | `null` | no |
 | ipv6_addresses | Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface | `list(string)` | `null` | no |
 | key_name | Key name of the Key Pair to use for the instance | `string` | `null` | no |
-| launch_template | Specifies a Launch Template to configure the instance | `map(string)` | `null` | no |
-| metadata_options | Customize the metadata options of the instance | `map(string)` | `{}` | no |
+| launch_template | Specifies a Launch Template to configure the instance. Supported keys: `id`, `name`, `version`. Parameters set on this module override the template | `map(string)` | `null` | no |
+| metadata_options | Customize the metadata options of the instance. Supported keys: `http_endpoint` (default `enabled`), `http_tokens` (default `optional`), `http_put_response_hop_limit` (default `1`), `instance_metadata_tags`. The block is always rendered, so omitted keys fall back to these defaults; set `http_tokens = "required"` to enforce IMDSv2 | `map(string)` | `{}` | no |
 | monitoring | If true, the launched EC2 instance will have detailed monitoring enabled | `bool` | `false` | no |
 | placement_group | The Placement Group to start the instance in | `string` | `null` | no |
 | private_ip | Private IP address to associate with the instance in a VPC | `string` | `null` | no |
-| root_block_device | Customize details about the root block device of the instance | `list(any)` | `[]` | no |
+| root_block_device | Customize details about the root block device of the instance. Supported keys: `delete_on_termination`, `encrypted`, `iops`, `kms_key_id`, `volume_size`, `volume_type`, `throughput`, `tags` | `list(any)` | `[]` | no |
 | secondary_private_ips | A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC | `list(string)` | `null` | no |
-| source_dest_check | Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs | `bool` | `null` | no |
+| source_dest_check | Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs. Applied at creation only (changes after launch are ignored; use `-replace` or the AWS CLI). Cannot be combined with `primary_network_interface`; set it on the ENI instead | `bool` | `null` | no |
 | subnet_id | The VPC Subnet ID to launch in | `string` | `null` | no |
-| primary_network_interface | ID of the primary network interface to attach at instance boot time. AWS provider 6.10.0+ replaces the deprecated `network_interface` block with `primary_network_interface` | `string` | `null` | no |
-| additional_network_interfaces | Additional network interfaces to attach via `aws_network_interface_attachment`. Map keys are used as stable resource identifiers for `for_each`. Each value supports `network_interface_id`, `device_index`, and optional `network_card_index` | `map(any)` | `{}` | no |
-| tags | A mapping of tags to assign to the resource | `map(string)` | `{}` | no |
+| primary_network_interface | ID of the primary network interface to attach at instance boot time. AWS provider 6.10.0+ replaces the deprecated `network_interface` block with `primary_network_interface`. When set, do not also set `subnet_id`, `vpc_security_group_ids`, `associate_public_ip_address`, `private_ip`, `secondary_private_ips`, `ipv6_*` or `source_dest_check`; configure them on the ENI. Must be a non-empty ENI ID or `null` | `string` | `null` | no |
+| additional_network_interfaces | Additional network interfaces to attach via `aws_network_interface_attachment`. Map keys are used as stable resource identifiers for `for_each`. Each value supports `network_interface_id`, `device_index`, and optional `network_card_index`. Each `(device_index, network_card_index)` pair must be unique | `map(object({ network_interface_id = string, device_index = number, network_card_index = optional(number) }))` | `{}` | no |
+| tags | A mapping of tags to assign to the instance. The `Name` tag is always set from `name` and overrides any `Name` given here | `map(string)` | `{}` | no |
 | instance_tags | A mapping of tags to assign to the EC2 instance (merged with `tags`) | `map(string)` | `{}` | no |
 | tenancy | The tenancy of the instance. Available values: `default`, `dedicated`, `host` | `string` | `null` | no |
-| user_data_base64 | Base64-encoded binary data to pass as user data. Use instead of user_data when the value is not a valid UTF-8 string | `string` | `null` | no |
-| user_data_replace_on_change | When true, changes to `user_data` or `user_data_base64` trigger a destroy and recreate | `bool` | `false` | no |
-| ignore_user_data_changes | When true, changes to `user_data` / `user_data_base64` after launch are ignored. Cannot be combined with `user_data_replace_on_change = true`. See [Ignoring user_data changes](#ignoring-user_data-changes) | `bool` | `false` | no |
-| volume_tags | A mapping of tags to assign to the devices created by the instance at launch time | `map(string)` | `{}` | no |
+| user_data_base64 | Base64-encoded user data. This is the only user data input of the module (there is no plain `user_data` variable); wrap plain text with `base64encode()` | `string` | `null` | no |
+| user_data_replace_on_change | When true, changes to `user_data_base64` trigger a destroy and recreate | `bool` | `false` | no |
+| ignore_user_data_changes | When true, changes to `user_data_base64` after launch are ignored. Cannot be combined with `user_data_replace_on_change = true` (plan fails with a precondition error). See [Ignoring user_data changes](#ignoring-user_data-changes) | `bool` | `false` | no |
+| volume_tags | A mapping of tags to assign to the devices created by the instance at launch time. Merged after `{ Name = name }`. Applied only when `enable_volume_tags = true` | `map(string)` | `{}` | no |
 | enable_volume_tags | Whether to enable volume tags (if enabled it conflicts with `root_block_device` tags) | `bool` | `true` | no |
 | vpc_security_group_ids | A list of security group IDs to associate with | `list(string)` | `null` | no |
 | timeouts | Define maximum timeout for creating, updating, and deleting EC2 instance resources | `map(string)` | `{}` | no |
-| eip_allocation_id | EIP allocation ID to associate with the EC2 instance | `string` | `null` | no |
+| eip_allocation_id | Allocation ID of an existing EIP to associate with the instance via `aws_eip_association` | `string` | `null` | no |
 
 ## Outputs
 
@@ -226,10 +226,13 @@ Because `lifecycle.ignore_changes` cannot be driven by a variable, the instance 
 | private_ip | The private IP address assigned to the instance |
 | ipv6_addresses | The IPv6 address assigned to the instance, if applicable |
 | tags_all | A map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block |
+| network_interface_attachment_ids | Map of attachment IDs keyed by the `additional_network_interfaces` map key |
+
+When `create = false`, string outputs return `""`, `ipv6_addresses` returns `[]`, and `tags_all` / `network_interface_attachment_ids` return `{}`.
 
 ## Notes
 
-- The module uses `lifecycle.ignore_changes = [ami]` on `aws_instance.this` to prevent drift from AMI updates after the instance has been launched. `aws_instance.ignore_user_data` additionally ignores `user_data` and `user_data_base64`.
+- The module uses `lifecycle.ignore_changes = [ami, source_dest_check]` on `aws_instance.this`, so AMI updates and `source_dest_check` changes after launch do not cause drift. `aws_instance.ignore_user_data` additionally ignores `user_data` and `user_data_base64`.
 - With the default `ignore_user_data_changes = false`, the instance stays at `aws_instance.this[0]`, so upgrading the module causes no plan changes for existing instances.
 - The deprecated `aws_instance.network_interface` inline block has been replaced with `primary_network_interface` (for the primary ENI) and `aws_network_interface_attachment` (for additional ENIs). This requires AWS provider version `>= 6.10.0`.
 - `cpu_credits` only takes effect for T-family instance types (`t2.*`, `t3.*`, `t3a.*`).
